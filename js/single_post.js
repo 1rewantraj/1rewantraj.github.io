@@ -28,35 +28,74 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     try {
         const postContentHtml = await fetchPostContent(postContentUrl);
+        const metadata = parsePostMetadata(postContentHtml);
+        
+        if (!metadata) {
+            throw new Error('Invalid post format: Missing metadata');
+        }
 
-        // For now, we don't have separate title and date here.
-        // We'll insert the raw content. The title is set in the document's <title> tag.
-        // A more advanced version might fetch metadata or expect it in the post file.
+        // Set the page title
+        document.title = metadata.title;
 
         const article = document.createElement('article');
-        article.classList.add('post'); // Assuming similar styling to other posts
+        article.classList.add('post');
 
-        const titleElement = document.createElement('h2');
+        // Create and append the title
+        const titleElement = document.createElement('h1');
         titleElement.classList.add('post-title');
-        titleElement.textContent = postTitle;
+        titleElement.textContent = metadata.title;
+        article.appendChild(titleElement);
 
-        // Date is not available here with current structure, so we omit it for now.
-        // One could pass it as another URL param, or include it in the post's HTML.
+        // Create and append the date
+        const dateElement = document.createElement('p');
+        dateElement.classList.add('post-meta');
+        dateElement.textContent = `Published on ${new Date(metadata.date).toLocaleDateString()}`;
+        article.appendChild(dateElement);
 
+        // Create and append the description
+        if (metadata.description) {
+            const descriptionElement = document.createElement('p');
+            descriptionElement.classList.add('post-description');
+            descriptionElement.textContent = metadata.description;
+            article.appendChild(descriptionElement);
+        }
+
+        // Create and append the content
         const contentDiv = document.createElement('div');
         contentDiv.classList.add('post-content');
-        contentDiv.innerHTML = postContentHtml;
-
-        article.appendChild(titleElement);
+        // Extract content after the metadata comment
+        const contentMatch = postContentHtml.match(/-->\s*\n([\s\S]*)/);
+        contentDiv.innerHTML = contentMatch ? contentMatch[1].trim() : postContentHtml;
         article.appendChild(contentDiv);
 
-        singlePostContainer.innerHTML = ''; // Clear any loading/error message
+        // Create and append tags if they exist
+        if (metadata.tags) {
+            const tagsElement = document.createElement('div');
+            tagsElement.classList.add('post-tags');
+            metadata.tags.split(',').forEach(tag => {
+                const tagSpan = document.createElement('span');
+                tagSpan.classList.add('tag');
+                tagSpan.textContent = tag.trim();
+                tagsElement.appendChild(tagSpan);
+            });
+            article.appendChild(tagsElement);
+        }
+
+        // Clear the container and append the article
+        singlePostContainer.innerHTML = '';
         singlePostContainer.appendChild(article);
-        loadComments(); // Load comments after post content is displayed
+
+        // Load comments after the post is displayed
+        loadComments();
 
     } catch (error) {
         console.error('Error loading post:', error);
-        singlePostContainer.innerHTML = `<p>Error loading post: ${postFilename}. Please try again later.</p>`;
+        singlePostContainer.innerHTML = `
+            <div class="error-message">
+                <p>Error loading post: ${postFilename}</p>
+                <p>Please try again later or contact the administrator if the problem persists.</p>
+                <a href="./" class="back-link">← Back to Home</a>
+            </div>`;
         document.title = "Error Loading Post";
     }
 
