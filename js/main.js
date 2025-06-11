@@ -1,61 +1,163 @@
 document.addEventListener('DOMContentLoaded', function() {
     const postsContainer = document.getElementById('posts-container');
-    // postTemplateUrl is no longer needed here for full content,
-    // but we might use a similar concept or inline HTML for snippets.
+    const searchInput = document.getElementById('search-input');
+    const tagFilter = document.getElementById('tag-filter');
 
-    const posts = [
-        {
-            title: 'My First Blog Post',
-            date: '2023-01-15',
-            contentFile: 'first-post.html' // Just the filename now
-        },
-        {
-            title: 'Another Interesting Article',
-            date: '2023-01-20',
-            contentFile: 'another-post.html' // Just the filename
-        }
-        // Add more post objects here
-    ];
+    // Function to parse post metadata from content
+    function parsePostMetadata(content) {
+        const metadataMatch = content.match(/<!--\s*\n([\s\S]*?)\n-->/);
+        if (!metadataMatch) return null;
 
-    // No longer need fetchPostContent or post_template.html fetching here for full content
+        const metadata = {};
+        const metadataLines = metadataMatch[1].split('\n');
+        
+        metadataLines.forEach(line => {
+            const [key, ...valueParts] = line.split(':');
+            if (key && valueParts.length) {
+                const value = valueParts.join(':').trim();
+                metadata[key.trim()] = value;
+            }
+        });
 
-    async function loadPostSnippets() {
+        return metadata;
+    }
+
+    // Function to fetch and process all posts
+    async function fetchAllPosts() {
         try {
-            // Sort posts by date in descending order
-            posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            if (posts.length === 0) {
-                postsContainer.innerHTML = '<p>No posts yet. Check back soon!</p>';
-                return;
+            const response = await fetch('./posts/');
+            const text = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            const links = Array.from(doc.querySelectorAll('a'));
+            
+            const posts = [];
+            for (const link of links) {
+                if (link.href.endsWith('.html')) {
+                    const filename = link.href.split('/').pop();
+                    const response = await fetch(`./posts/${filename}`);
+                    const content = await response.text();
+                    const metadata = parsePostMetadata(content);
+                    
+                    if (metadata) {
+                        posts.push({
+                            title: metadata.title,
+                            date: metadata.date,
+                            description: metadata.description,
+                            tags: metadata.tags ? metadata.tags.split(',').map(tag => tag.trim()) : [],
+                            contentFile: filename
+                        });
+                    }
+                }
             }
-
-            for (const post of posts) {
-                const postSnippetElement = document.createElement('article');
-                postSnippetElement.classList.add('post-snippet'); // New class for styling snippets
-
-                const titleElement = document.createElement('h2');
-                titleElement.classList.add('post-title');
-                
-                // Create a link for the title
-                const titleLink = document.createElement('a');
-                titleLink.href = `./single_post.html?post=${encodeURIComponent(post.contentFile)}`;
-                titleLink.textContent = post.title;
-                titleElement.appendChild(titleLink);
-
-                const dateElement = document.createElement('p');
-                dateElement.classList.add('post-meta');
-                dateElement.textContent = `Published on ${post.date}`;
-
-                postSnippetElement.appendChild(titleElement);
-                postSnippetElement.appendChild(dateElement);
-
-                postsContainer.appendChild(postSnippetElement);
-            }
+            return posts;
         } catch (error) {
-            console.error('Error loading post snippets:', error);
-            postsContainer.innerHTML = '<p>Error loading posts. Please try again later.</p>';
+            console.error('Error fetching posts:', error);
+            return [];
         }
     }
 
-    loadPostSnippets();
+    // Function to render posts
+    function renderPosts(posts) {
+        postsContainer.innerHTML = '';
+        
+        if (posts.length === 0) {
+            postsContainer.innerHTML = '<p class="no-posts">No posts found. Check back soon!</p>';
+            return;
+        }
+
+        // Sort posts by date (newest first)
+        posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Create tag filter if it doesn't exist
+        if (!tagFilter.querySelector('select')) {
+            const allTags = new Set(posts.flatMap(post => post.tags));
+            const select = document.createElement('select');
+            select.innerHTML = '<option value="">All Tags</option>' + 
+                Array.from(allTags).map(tag => 
+                    `<option value="${tag}">${tag}</option>`
+                ).join('');
+            tagFilter.appendChild(select);
+        }
+
+        posts.forEach(post => {
+            const postElement = document.createElement('article');
+            postElement.classList.add('post-snippet');
+
+            const titleElement = document.createElement('h2');
+            titleElement.classList.add('post-title');
+            
+            const titleLink = document.createElement('a');
+            titleLink.href = `./single_post.html?post=${encodeURIComponent(post.contentFile)}`;
+            titleLink.textContent = post.title;
+            titleElement.appendChild(titleLink);
+
+            const dateElement = document.createElement('p');
+            dateElement.classList.add('post-meta');
+            dateElement.textContent = `Published on ${new Date(post.date).toLocaleDateString()}`;
+
+            const descriptionElement = document.createElement('p');
+            descriptionElement.classList.add('post-description');
+            descriptionElement.textContent = post.description;
+
+            const tagsElement = document.createElement('div');
+            tagsElement.classList.add('post-tags');
+            post.tags.forEach(tag => {
+                const tagSpan = document.createElement('span');
+                tagSpan.classList.add('tag');
+                tagSpan.textContent = tag;
+                tagsElement.appendChild(tagSpan);
+            });
+
+            postElement.appendChild(titleElement);
+            postElement.appendChild(dateElement);
+            postElement.appendChild(descriptionElement);
+            postElement.appendChild(tagsElement);
+
+            postsContainer.appendChild(postElement);
+        });
+    }
+
+    // Function to filter posts
+    function filterPosts(posts, searchTerm, selectedTag) {
+        return posts.filter(post => {
+            const matchesSearch = searchTerm === '' || 
+                post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                post.description.toLowerCase().includes(searchTerm.toLowerCase());
+            
+            const matchesTag = selectedTag === '' || 
+                post.tags.includes(selectedTag);
+
+            return matchesSearch && matchesTag;
+        });
+    }
+
+    // Initialize the blog
+    let allPosts = [];
+    fetchAllPosts().then(posts => {
+        allPosts = posts;
+        renderPosts(posts);
+    });
+
+    // Add search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value;
+            const selectedTag = tagFilter.querySelector('select')?.value || '';
+            const filteredPosts = filterPosts(allPosts, searchTerm, selectedTag);
+            renderPosts(filteredPosts);
+        });
+    }
+
+    // Add tag filter functionality
+    if (tagFilter) {
+        tagFilter.addEventListener('change', (e) => {
+            if (e.target.tagName === 'SELECT') {
+                const selectedTag = e.target.value;
+                const searchTerm = searchInput?.value || '';
+                const filteredPosts = filterPosts(allPosts, searchTerm, selectedTag);
+                renderPosts(filteredPosts);
+            }
+        });
+    }
 });
