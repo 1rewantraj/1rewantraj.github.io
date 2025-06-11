@@ -25,34 +25,88 @@ main {
 }
 
 .post {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
+    background: white;
+    border-radius: 8px;
+    padding: 2em;
+    margin-bottom: 2em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.post:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
+.post-header {
+    margin-bottom: 1.5em;
 }
 
 .post-title {
-    margin-top: 0;
-}
-
-.post-title a {
+    margin: 0 0 0.5em 0;
+    font-size: 2em;
     color: #333;
-    text-decoration: none;
-    transition: color 0.2s ease;
-}
-
-.post-title a:hover {
-    color: #007bff;
-    text-decoration: underline;
 }
 
 .post-meta {
-    font-size: 0.9em;
     color: #666;
+    font-size: 0.9em;
+    margin-bottom: 0.5em;
+}
+
+.post-description {
+    color: #444;
+    font-size: 1.1em;
+    margin-bottom: 1em;
+    line-height: 1.5;
+}
+
+.post-content {
+    color: #333;
+    line-height: 1.6;
+    font-size: 1.1em;
+}
+
+.post-content h2 {
+    color: #222;
+    margin: 1.5em 0 0.8em;
+    font-size: 1.5em;
+}
+
+.post-content p {
+    margin-bottom: 1.2em;
+}
+
+.post-content ul, .post-content ol {
+    margin-bottom: 1.2em;
+    padding-left: 2em;
+}
+
+.post-content li {
+    margin-bottom: 0.5em;
+}
+
+.post-content blockquote {
+    border-left: 4px solid #007bff;
+    margin: 1.5em 0;
+    padding: 0.5em 1em;
+    background-color: #f8f9fa;
+    color: #555;
+}
+
+.post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-top: 1em;
+}
+
+.tag {
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 0.3em 0.8em;
+    border-radius: 15px;
+    font-size: 0.85em;
+}
+
+.post-separator {
+    margin: 2em 0;
+    border: none;
+    border-top: 1px solid #eee;
 }
 
 footer {
@@ -347,12 +401,17 @@ footer {
         padding: 0 0.5em;
     }
 
-    .post-snippet {
-        padding: 1em;
+    .post {
+        padding: 1.5em;
+        margin-bottom: 1.5em;
     }
 
     .post-title {
-        font-size: 1.3em;
+        font-size: 1.6em;
+    }
+
+    .post-content {
+        font-size: 1em;
     }
 }
 

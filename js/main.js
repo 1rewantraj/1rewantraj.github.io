@@ -22,6 +22,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return metadata;
     }
 
+    // Function to extract content after metadata
+    function extractPostContent(content) {
+        const contentMatch = content.match(/-->\s*\n([\s\S]*)/);
+        return contentMatch ? contentMatch[1].trim() : content;
+    }
+
     // Function to fetch and process all posts
     async function fetchAllPosts() {
         try {
@@ -45,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             date: metadata.date,
                             description: metadata.description,
                             tags: metadata.tags ? metadata.tags.split(',').map(tag => tag.trim()) : [],
-                            contentFile: filename
+                            content: extractPostContent(content)
                         });
                     }
                 }
@@ -82,15 +88,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         posts.forEach(post => {
             const postElement = document.createElement('article');
-            postElement.classList.add('post-snippet');
+            postElement.classList.add('post');
+
+            // Create post header
+            const headerElement = document.createElement('header');
+            headerElement.classList.add('post-header');
 
             const titleElement = document.createElement('h2');
             titleElement.classList.add('post-title');
-            
-            const titleLink = document.createElement('a');
-            titleLink.href = `./single_post.html?post=${encodeURIComponent(post.contentFile)}`;
-            titleLink.textContent = post.title;
-            titleElement.appendChild(titleLink);
+            titleElement.textContent = post.title;
 
             const dateElement = document.createElement('p');
             dateElement.classList.add('post-meta');
@@ -109,10 +115,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 tagsElement.appendChild(tagSpan);
             });
 
-            postElement.appendChild(titleElement);
-            postElement.appendChild(dateElement);
-            postElement.appendChild(descriptionElement);
-            postElement.appendChild(tagsElement);
+            headerElement.appendChild(titleElement);
+            headerElement.appendChild(dateElement);
+            headerElement.appendChild(descriptionElement);
+            headerElement.appendChild(tagsElement);
+
+            // Create post content
+            const contentElement = document.createElement('div');
+            contentElement.classList.add('post-content');
+            contentElement.innerHTML = post.content;
+
+            // Add a separator between posts
+            const separator = document.createElement('hr');
+            separator.classList.add('post-separator');
+
+            postElement.appendChild(headerElement);
+            postElement.appendChild(contentElement);
+            postElement.appendChild(separator);
 
             postsContainer.appendChild(postElement);
         });
@@ -123,7 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return posts.filter(post => {
             const matchesSearch = searchTerm === '' || 
                 post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                post.description.toLowerCase().includes(searchTerm.toLowerCase());
+                post.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                post.content.toLowerCase().includes(searchTerm.toLowerCase());
             
             const matchesTag = selectedTag === '' || 
                 post.tags.includes(selectedTag);
