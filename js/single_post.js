@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.title = postTitle; // Set the page title
 
     // Construct the path to the post content file
-    const postContentUrl = `posts/${postFilename}`;
+    const postContentUrl = `./posts/${postFilename}`;
 
     async function fetchPostContent(url) {
         const response = await fetch(url);

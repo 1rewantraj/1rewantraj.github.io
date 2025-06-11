@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Create a link for the title
                 const titleLink = document.createElement('a');
-                titleLink.href = `single_post.html?post=${encodeURIComponent(post.contentFile)}`;
+                titleLink.href = `./single_post.html?post=${encodeURIComponent(post.contentFile)}`;
                 titleLink.textContent = post.title;
                 titleElement.appendChild(titleLink);
 
