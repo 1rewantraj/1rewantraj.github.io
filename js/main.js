@@ -1,52 +1,63 @@
 document.addEventListener('DOMContentLoaded', function() {
     const postsContainer = document.getElementById('posts-container');
-    const postTemplateUrl = 'post_template.html';
+    // postTemplateUrl is no longer needed here for full content,
+    // but we might use a similar concept or inline HTML for snippets.
 
-    // Example posts data - in a real application, this would come from a backend or separate JSON files
     const posts = [
         {
             title: 'My First Blog Post',
             date: '2023-01-15',
-            contentFile: 'posts/first-post.html' // Path to the content file
+            contentFile: 'first-post.html' // Just the filename now
         },
         {
             title: 'Another Interesting Article',
             date: '2023-01-20',
-            contentFile: 'posts/another-post.html'
+            contentFile: 'another-post.html' // Just the filename
         }
         // Add more post objects here
     ];
 
-    async function fetchPostContent(url) {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
-        }
-        return await response.text();
-    }
+    // No longer need fetchPostContent or post_template.html fetching here for full content
 
-    async function loadPosts() {
+    async function loadPostSnippets() {
         try {
-            const templateContent = await fetchPostContent(postTemplateUrl);
-
             // Sort posts by date in descending order
             posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+            if (posts.length === 0) {
+                postsContainer.innerHTML = '<p>No posts yet. Check back soon!</p>';
+                return;
+            }
+
             for (const post of posts) {
-                const postContentHtml = await fetchPostContent(post.contentFile);
+                const postSnippetElement = document.createElement('article');
+                postSnippetElement.classList.add('post-snippet'); // New class for styling snippets
 
-                let postHtml = templateContent;
-                postHtml = postHtml.replace('{POST_TITLE}', post.title);
-                postHtml = postHtml.replace('{POST_DATE}', post.date);
-                postHtml = postHtml.replace('{POST_CONTENT}', postContentHtml);
+                const titleElement = document.createElement('h2');
+                titleElement.classList.add('post-title');
+                titleElement.textContent = post.title;
 
-                postsContainer.innerHTML += postHtml;
+                const dateElement = document.createElement('p');
+                dateElement.classList.add('post-meta');
+                dateElement.textContent = `Published on ${post.date}`;
+
+                const readMoreLink = document.createElement('a');
+                readMoreLink.classList.add('read-more');
+                readMoreLink.textContent = 'Read More';
+                // Construct the link to the single post page
+                readMoreLink.href = `single_post.html?post=${encodeURIComponent(post.contentFile)}`;
+
+                postSnippetElement.appendChild(titleElement);
+                postSnippetElement.appendChild(dateElement);
+                postSnippetElement.appendChild(readMoreLink);
+
+                postsContainer.appendChild(postSnippetElement);
             }
         } catch (error) {
-            console.error('Error loading posts:', error);
+            console.error('Error loading post snippets:', error);
             postsContainer.innerHTML = '<p>Error loading posts. Please try again later.</p>';
         }
     }
 
-    loadPosts();
+    loadPostSnippets();
 });
