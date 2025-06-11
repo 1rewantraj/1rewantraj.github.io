@@ -39,6 +39,17 @@ main {
     margin-top: 0;
 }
 
+.post-title a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.post-title a:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
 .post-meta {
     font-size: 0.9em;
     color: #666;

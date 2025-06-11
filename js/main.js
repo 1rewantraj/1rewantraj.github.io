@@ -35,21 +35,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const titleElement = document.createElement('h2');
                 titleElement.classList.add('post-title');
-                titleElement.textContent = post.title;
+                
+                // Create a link for the title
+                const titleLink = document.createElement('a');
+                titleLink.href = `single_post.html?post=${encodeURIComponent(post.contentFile)}`;
+                titleLink.textContent = post.title;
+                titleElement.appendChild(titleLink);
 
                 const dateElement = document.createElement('p');
                 dateElement.classList.add('post-meta');
                 dateElement.textContent = `Published on ${post.date}`;
 
-                const readMoreLink = document.createElement('a');
-                readMoreLink.classList.add('read-more');
-                readMoreLink.textContent = 'Read More';
-                // Construct the link to the single post page
-                readMoreLink.href = `single_post.html?post=${encodeURIComponent(post.contentFile)}`;
-
                 postSnippetElement.appendChild(titleElement);
                 postSnippetElement.appendChild(dateElement);
-                postSnippetElement.appendChild(readMoreLink);
 
                 postsContainer.appendChild(postSnippetElement);
             }
